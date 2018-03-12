@@ -3,15 +3,18 @@ package api
 import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/mistikel/inventoy/inventory"
+	"github.com/mistikel/inventoy/report"
 )
 
 type API struct {
 	Inventory *inventory.InventoryModule
+	Report    *report.ReportModule
 }
 
 func Api() *API {
 	return &API{
 		Inventory: inventory.NewInventoryModule(),
+		Report:    report.NewReportModule(),
 	}
 }
 
@@ -36,4 +39,8 @@ func (api *API) Register(r *httprouter.Router) {
 	r.POST("/outbound_items", api.Inventory.StoreOutboundItem)
 	r.PUT("/outbound_items/:id", api.Inventory.PutOutboundItem)
 	r.DELETE("/outbound_items/:id", api.Inventory.RemoveOutboundItem)
+
+	// report
+	r.GET("/report/item_value", api.Report.GetItemValueReport)
+	r.GET("/report/selling/:month", api.Report.GetSellingReport)
 }

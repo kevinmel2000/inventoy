@@ -3,6 +3,7 @@ package inventory
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,14 @@ import (
 )
 
 type AddOutboundItemForm struct {
-	ItemId     int    `valid:"required"`
+	Notes string `valid:"required"`
+	Item  []AddOrderItemForm
+}
+
+type AddOrderItemForm struct {
+	Id         int
+	ItemId     int `valid:"required"`
+	BatchId    int
 	SellAmount int    `valid:"required"`
 	Price      int    `valid:"required"`
 	Total      int    `valid:"required"`
@@ -23,11 +31,8 @@ type AddOutboundItemForm struct {
 
 func (aif *AddOutboundItemForm) FieldMap(r *http.Request) binding.FieldMap {
 	return binding.FieldMap{
-		&aif.ItemId:     "item_id",
-		&aif.SellAmount: "sell_amount",
-		&aif.Price:      "price",
-		&aif.Total:      "total",
-		&aif.Notes:      "notes",
+		&aif.Notes: "notes",
+		&aif.Item:  "item",
 	}
 }
 
@@ -66,6 +71,7 @@ func (inventoryModule *InventoryModule) StoreOutboundItem(w http.ResponseWriter,
 
 	addOutboundItemForm := new(AddOutboundItemForm)
 	if err := binding.Bind(r, addOutboundItemForm); err != nil {
+		log.Println("Binding Error : ", err)
 		errors.InternalServer(ctx, w, err)
 		return
 	}
@@ -79,18 +85,42 @@ func (inventoryModule *InventoryModule) StoreOutboundItem(w http.ResponseWriter,
 	itemDatamodel := model.NewOutboundItemModel(ctx)
 
 	outboundItem := model.OutboundItem{
-		ItemId:     addOutboundItemForm.ItemId,
-		SellAmount: addOutboundItemForm.SellAmount,
-		Price:      addOutboundItemForm.Price,
-		Total:      addOutboundItemForm.Total,
-		Notes:      addOutboundItemForm.Notes,
+		Notes: addOutboundItemForm.Notes,
 	}
 
-	err = itemDatamodel.Store(ctx, outboundItem)
-
+	err = itemDatamodel.Store(ctx, &outboundItem)
 	if err != nil {
 		errors.InternalServer(ctx, w, err)
 		return
+	}
+
+	stockBatchModel := model.NewStockBatchodel(ctx)
+	orderItemModel := model.NewOrderItemModel(ctx)
+	itemModel := model.NewItemModel(ctx)
+	for _, order := range addOutboundItemForm.Item {
+		stock, err := stockBatchModel.GetItemStock(ctx, order.ItemId)
+		if err != nil && stock.Id == 0 {
+			log.Println("Stock not available", err)
+		}
+		// update stock
+		stock.Stock -= order.SellAmount
+		stockBatchModel.Update(ctx, stock.Id, stock)
+
+		orderItem := model.OrderItem{
+			ItemID:     order.ItemId,
+			OutboundID: outboundItem.Id,
+			BatchID:    stock.Id,
+			SellAmount: order.SellAmount,
+			Price:      order.Price,
+			Total:      order.Total,
+			Notes: 		order.Notes,
+		}
+		// update stock item
+		item, _ := itemModel.Get(ctx, order.ItemId)
+		item.Stock -= order.SellAmount
+		itemModel.Update(ctx, item.Id, item)
+		// order item
+		orderItemModel.Store(ctx, orderItem)
 	}
 
 	w.Write([]byte(`{ "Status" : "Ok" }`))
@@ -111,22 +141,38 @@ func (inventoryModule *InventoryModule) PutOutboundItem(w http.ResponseWriter, r
 		return
 	}
 
-	itemDatamodel := model.NewOutboundItemModel(ctx)
-
-	outboundItem := model.OutboundItem{
-		ItemId:     addOutboundItemForm.ItemId,
-		SellAmount: addOutboundItemForm.SellAmount,
-		Price:      addOutboundItemForm.Price,
-		Total:      addOutboundItemForm.Total,
-		Notes:      addOutboundItemForm.Notes,
-	}
-
 	id, _ := strconv.Atoi(p.ByName("id"))
+
+	itemDatamodel := model.NewOutboundItemModel(ctx)
+	outboundItem := model.OutboundItem{
+		Notes: addOutboundItemForm.Notes,
+	}
 
 	err = itemDatamodel.Update(ctx, id, outboundItem)
 	if err != nil {
-		errors.DataNotFound(ctx, w)
+		errors.InternalServer(ctx, w, err)
 		return
+	}
+
+	stockBatchModel := model.NewStockBatchodel(ctx)
+	orderItemModel := model.NewOrderItemModel(ctx)
+	for _, order := range addOutboundItemForm.Item {
+		stock, err := stockBatchModel.Get(ctx, order.BatchId)
+		if err != nil && stock.Id == 0 {
+			log.Println("Stock not available", err)
+		}
+		orderItem, _ := orderItemModel.Get(ctx, order.Id)
+		// update stock
+		stock.Stock += orderItem.SellAmount
+		stock.Stock += order.SellAmount
+		stockBatchModel.Update(ctx, stock.Id, stock)
+
+		//update order item
+		orderItem.SellAmount = order.SellAmount
+		orderItem.Price = order.Price
+		orderItem.Total = order.Total
+		orderItem.Notes = order.Notes
+		orderItemModel.Update(ctx, orderItem.Id, orderItem)
 	}
 
 	w.Write([]byte(`{ "Status" : "Ok" }`))

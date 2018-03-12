@@ -104,6 +104,13 @@ func (inventoryModule *InventoryModule) StoreInboundItem(w http.ResponseWriter, 
 		return
 	}
 
+	// set item stock
+	itemModel := model.NewItemModel(ctx)
+	item, _ := itemModel.Get(ctx, inboundItem.ItemID)
+	item.Stock += inboundItem.ReceivedAmount
+	itemModel.Update(ctx, item.Id, item)
+
+	// set batch stock
 	batchModel := model.NewStockBatchodel(ctx)
 	batch := model.StockBatch{
 		InboundId: inboundItem.Id,

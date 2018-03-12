@@ -9,16 +9,26 @@ import (
 )
 
 func (reportModule *ReportModule) GetItemValueReport(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	record := []string{"test1", "test2", "test3"} // just some test data to use for the wr.Writer() method below.
+	record := []string{"SSI-D00791015-LL-BWH", "Zalekia Plain Casual Blouse (L,Broken White)", "53", "Rp70,448", "Rp3,733,735"}
 
-	b := &bytes.Buffer{}       // creates IO Writer
-	wr := csv.NewWriter(b)     // creates a csv writer that uses the io buffer.
-	for i := 0; i < 100; i++ { // make a loop formake 100 rows just for testing purposes
-		wr.Write(record) // converts array of string to comma seperated values for 1 row.
+	b := &bytes.Buffer{}
+	wr := csv.NewWriter(b)
+	// Header
+	wr.Write([]string{"LAPORAN NILAI BARANG"})
+	wr.Write([]string{})
+	wr.Write([]string{"Tanggal Cetak", "8 Januari 2018"})
+	wr.Write([]string{"Jumlah SKU", "31"})
+	wr.Write([]string{"Jumlah Total Barang", "4086"})
+	wr.Write([]string{"Total Nilai", "Rp286,272,941"})
+	wr.Write([]string{})
+	wr.Write([]string{"SKU", "Nama Item", "Jumlah", "Rata-Rata Harga Beli", "Total"})
+
+	for i := 0; i < 20; i++ {
+		wr.Write(record)
 	}
-	wr.Flush() // writes the csv writer data to  the buffered data io writer(b(bytes.buffer))
+	wr.Flush()
 
-	w.Header().Set("Content-Type", "text/csv") // setting the content type header to text/csv
+	w.Header().Set("Content-Type", "text/csv")
 
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", "attachment;filename=TheCSVFileName.csv")

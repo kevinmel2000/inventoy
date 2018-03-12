@@ -11,16 +11,16 @@ import (
 type ModelModule struct{}
 
 type Data struct {
-	CreateTime time.Time `gorm:"null" json:"create_time"`
-	CreateBy   string    `gorm:"null" json:"create_by"`
-	UpdateTime time.Time `gorm:"null" json:"update_time"`
-	UpdateBy   string    `gorm:"null" json:"update_by"`
+	CreatedAt time.Time `gorm:"null" json:"created_at"`
+	CreateBy  string    `gorm:"null" json:"created_by"`
+	UpdatedAt time.Time `gorm:"null" json:"updated_at"`
+	UpdateBy  string    `gorm:"null" json:"updated_by"`
 }
 
 func NewData() Data {
 	return Data{
-		CreateTime: time.Now(),
-		CreateBy:   "",
+		CreatedAt: time.Now(),
+		CreateBy:  "",
 	}
 }
 
@@ -44,6 +44,16 @@ func initDB() *gorm.DB {
 	if !db.HasTable(&OutboundItem{}) {
 		db.CreateTable(&OutboundItem{})
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&OutboundItem{})
+	}
+
+	if !db.HasTable(&StockBatch{}) {
+		db.CreateTable(&StockBatch{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&StockBatch{})
+	}
+
+	if !db.HasTable(&OrderItem{}) {
+		db.CreateTable(&OrderItem{})
+		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&OrderItem{})
 	}
 
 	return db
