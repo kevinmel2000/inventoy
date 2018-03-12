@@ -74,3 +74,10 @@ func (itemDatamodel ItemDatamodel) Delete(ctx context.Context, id int) error {
 
 	return nil
 }
+
+func (itemDatamodel ItemDatamodel) GetTotalSKU(ctx context.Context) int {
+	db := initDB()
+	defer db.Close()
+
+	return 1
+}

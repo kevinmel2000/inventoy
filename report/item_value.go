@@ -2,14 +2,20 @@ package report
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/mistikel/inventoy/model"
 )
 
 func (reportModule *ReportModule) GetItemValueReport(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ctx := context.Background()
 	record := []string{"SSI-D00791015-LL-BWH", "Zalekia Plain Casual Blouse (L,Broken White)", "53", "Rp70,448", "Rp3,733,735"}
+
+	itemDatamodel := model.NewItemModel(ctx)
+	TotalSku, _ := itemDatamodel.GetMany(ctx) // len(totalsku)
 
 	b := &bytes.Buffer{}
 	wr := csv.NewWriter(b)
