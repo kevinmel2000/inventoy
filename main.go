@@ -18,6 +18,7 @@ func main() {
 
 	http.Handle("/", router)
 
+	log.Println("Server running on localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 

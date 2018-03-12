@@ -1,10 +1,12 @@
 package model
 
-import "context"
+import (
+	"context"
+)
 
 type InboundItem struct {
 	Id             int    `json:"id"`
-	ItemId         int    `json:"id_item"`
+	ItemID         int    `json:"id_item"`
 	Status         int    `json:"status"`
 	OrderAmount    int    `json:"order_amount"`
 	ReceivedAmount int    `json:"received_amount"`
@@ -13,7 +15,8 @@ type InboundItem struct {
 	ReceiptNumber  string `json:"receipt_number"`
 	Notes          string `json:"notes"`
 	Data
-	Item Item
+	Item       Item
+	StockBatch StockBatch
 }
 
 type InboundItemDatamodel struct{}
@@ -42,12 +45,11 @@ func (inboundItemDatamodel InboundItemDatamodel) Get(ctx context.Context, id int
 	return item, err
 }
 
-func (inboundItemDatamodel InboundItemDatamodel) Store(ctx context.Context, item InboundItem) error {
+func (inboundItemDatamodel InboundItemDatamodel) Store(ctx context.Context, item *InboundItem) error {
 	db := initDB()
 	defer db.Close()
 
 	err := db.Create(&item).Error
-
 	return err
 }
 

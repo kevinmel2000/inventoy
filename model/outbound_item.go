@@ -5,12 +5,14 @@ import "context"
 type OutboundItem struct {
 	Id         int    `json:"id"`
 	ItemId     int    `json:"id_item"`
+	BatchId    int    `json:"-"`
 	SellAmount int    `json:"sell_amount"`
 	Price      int    `json:"price"`
 	Total      int    `json:"total_price"`
 	Notes      string `json:"notes"`
 	Data
-	Item Item
+	Item       Item
+	StockBatch StockBatch
 }
 
 type OutboundItemDatamodel struct{}

@@ -3,6 +3,7 @@ package inventory
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,7 @@ import (
 )
 
 type AddInboundItemForm struct {
-	ItemId         int    `valid:"required"`
+	ItemID         int    `valid:"required"`
 	Status         int    `valid:"required"`
 	OrderAmount    int    `valid:"required"`
 	ReceivedAmount int    `valid:"required"`
@@ -26,14 +27,14 @@ type AddInboundItemForm struct {
 
 func (aif *AddInboundItemForm) FieldMap(r *http.Request) binding.FieldMap {
 	return binding.FieldMap{
-		&aif.ItemId:        "item_id",
-		&aif.Status:        "status",
-		&aif.OrderAmount:   "order_amount",
-		&aif.ReceiptNumber: "received_amount",
-		&aif.Price:         "price",
-		&aif.Total:         "total",
-		&aif.ReceiptNumber: "receipt_number",
-		&aif.Notes:         "notes",
+		&aif.ItemID:         "itemID",
+		&aif.Status:         "status",
+		&aif.OrderAmount:    "orderAmount",
+		&aif.ReceivedAmount: "receivedAmount",
+		&aif.Price:          "price",
+		&aif.Total:          "total",
+		&aif.ReceiptNumber:  "receiptNumber",
+		&aif.Notes:          "notes",
 	}
 }
 
@@ -78,14 +79,15 @@ func (inventoryModule *InventoryModule) StoreInboundItem(w http.ResponseWriter, 
 
 	valid, err := govalidator.ValidateStruct(addInboundItemForm)
 	if !valid && err != nil {
-		errors.InternalServer(ctx, w, err)
+		fmt.Printf("Error: %v\n", err)
+		errors.DataNotFound(ctx, w)
 		return
 	}
 
 	itemDatamodel := model.NewInboundItemModel(ctx)
 
 	inboundItem := model.InboundItem{
-		ItemId:         addInboundItemForm.ItemId,
+		ItemID:         addInboundItemForm.ItemID,
 		Status:         addInboundItemForm.Status,
 		OrderAmount:    addInboundItemForm.OrderAmount,
 		ReceivedAmount: addInboundItemForm.ReceivedAmount,
@@ -95,12 +97,22 @@ func (inventoryModule *InventoryModule) StoreInboundItem(w http.ResponseWriter, 
 		Notes:          addInboundItemForm.Notes,
 	}
 
-	err = itemDatamodel.Store(ctx, inboundItem)
+	err = itemDatamodel.Store(ctx, &inboundItem)
 
 	if err != nil {
 		errors.InternalServer(ctx, w, err)
 		return
 	}
+
+	batchModel := model.NewStockBatchodel(ctx)
+	batch := model.StockBatch{
+		InboundId: inboundItem.Id,
+		ItemID:    inboundItem.ItemID,
+		Price:     inboundItem.Price,
+		Stock:     inboundItem.ReceivedAmount,
+	}
+
+	batchModel.Store(ctx, batch)
 
 	w.Write([]byte(`{ "Status" : "Ok" }`))
 }
@@ -124,7 +136,7 @@ func (inventoryModule *InventoryModule) PutInboundItem(w http.ResponseWriter, r 
 
 	id, _ := strconv.Atoi(p.ByName("id"))
 	inboundItem := model.InboundItem{
-		ItemId:         addInboundItemForm.ItemId,
+		ItemID:         addInboundItemForm.ItemID,
 		Status:         addInboundItemForm.Status,
 		OrderAmount:    addInboundItemForm.OrderAmount,
 		ReceivedAmount: addInboundItemForm.ReceivedAmount,
