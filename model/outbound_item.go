@@ -93,7 +93,7 @@ func (outboundItemDatamodel OutboundItemDatamodel) GetRecord(ctx context.Context
 	defer db.Close()
 	var omset, laba, selling, totalItem int
 	var outbounds []OutboundItem
-	db.Where("created_at >= ? ", dt1).Where("created_at < ? ", dt2).Find(&outbounds)
+	db.Where("created_at >= ? ", dt1).Where("created_at <= ? ", dt2).Find(&outbounds)
 	itemDatamodel := NewItemModel(ctx)
 	orderItemDatamodel := NewOrderItemModel(ctx)
 	batchDatamodel := NewStockBatchodel(ctx)

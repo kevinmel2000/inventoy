@@ -3,10 +3,10 @@ package model
 import "context"
 
 type Item struct {
-	Id    int    `gorm:"primary_key;AUTO_INCREMENT" json:"id"`
-	Sku   string `gorm:"type:varchar(100);unique" json:"sku"`
-	Name  string `gorm:"not null" json:"name"`
-	Stock int    `gorm:"not null" json:"stock"`
+	Id    int    `json:"id"`
+	Sku   string `json:"sku"`
+	Name  string `json:"name"`
+	Stock int    `json:"stock"`
 	Data
 }
 

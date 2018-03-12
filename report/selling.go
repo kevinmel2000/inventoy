@@ -31,7 +31,7 @@ func (reportModule *ReportModule) GetSellingReport(w http.ResponseWriter, r *htt
 	wr.Write([]string{"LAPORAN PENJUALAN"})
 	wr.Write([]string{})
 	wr.Write([]string{"Tanggal Cetak", strconv.Itoa(day) + " " + month.String() + " " + strconv.Itoa(year)})
-	wr.Write([]string{"Tanggal", "1 December 2018 - 31 December 2018"})
+	wr.Write([]string{"Tanggal", dt1 + " - " + dt2})
 	wr.Write([]string{"Total Omzet", "Rp" + strconv.Itoa(omset)})
 	wr.Write([]string{"Total Laba Kotor", "Rp" + strconv.Itoa(laba)})
 	wr.Write([]string{"Total Penjualan", strconv.Itoa(selling)})
