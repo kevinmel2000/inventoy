@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+  app:
+    image: golang:1.9
+    volumes:
+      - .:/go/src/github.com/mistikel/inventoy
+    working_dir: /go/src/github.com/mistikel/inventoy
+    ports: 
+      - "8080:8080"
+    command: bash -c "go run main.go"
+   

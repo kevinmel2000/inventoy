@@ -2,25 +2,44 @@ package report
 
 import (
 	"bytes"
+	"context"
 	"encoding/csv"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/mistikel/inventoy/model"
 )
 
 func (reportModule *ReportModule) GetItemValueReport(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	record := []string{"test1", "test2", "test3"} // just some test data to use for the wr.Writer() method below.
+	ctx := context.Background()
+	year, month, day := time.Now().Date()
+	itemDatamodel := model.NewItemModel(ctx)
+	record := itemDatamodel.GetRecord(ctx)
+	TotalSku, _ := itemDatamodel.GetMany(ctx)
+	totalItem := itemDatamodel.GetTotalItem(ctx)
+	totalValue := itemDatamodel.GetTotalValue(ctx)
+	b := &bytes.Buffer{}
+	wr := csv.NewWriter(b)
+	// Header
+	wr.Write([]string{"LAPORAN NILAI BARANG"})
+	wr.Write([]string{})
+	wr.Write([]string{"Tanggal Cetak", strconv.Itoa(day) + " " + month.String() + " " + strconv.Itoa(year)})
+	wr.Write([]string{"Jumlah SKU", strconv.Itoa(len(TotalSku))})
+	wr.Write([]string{"Jumlah Total Barang", strconv.Itoa(totalItem)})
+	wr.Write([]string{"Total Nilai", "Rp" + strconv.Itoa(totalValue)})
+	wr.Write([]string{})
+	wr.Write([]string{"SKU", "Nama Item", "Jumlah", "Rata-Rata Harga Beli", "Total"})
 
-	b := &bytes.Buffer{}       // creates IO Writer
-	wr := csv.NewWriter(b)     // creates a csv writer that uses the io buffer.
-	for i := 0; i < 100; i++ { // make a loop formake 100 rows just for testing purposes
-		wr.Write(record) // converts array of string to comma seperated values for 1 row.
+	for _, r := range record {
+		wr.Write([]string{r.Sku, r.Name, strconv.Itoa(r.TotalItem), "Rp" + strconv.Itoa(r.Avarage), "Rp" + strconv.Itoa(r.TotalValue)})
 	}
-	wr.Flush() // writes the csv writer data to  the buffered data io writer(b(bytes.buffer))
-
-	w.Header().Set("Content-Type", "text/csv") // setting the content type header to text/csv
+	wr.Flush()
 
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment;filename=TheCSVFileName.csv")
+
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment;filename=Laporan Nilai Barang.csv")
 	w.Write(b.Bytes())
 }

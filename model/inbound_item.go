@@ -15,8 +15,8 @@ type InboundItem struct {
 	ReceiptNumber  string `json:"receipt_number"`
 	Notes          string `json:"notes"`
 	Data
-	Item       Item
-	StockBatch StockBatch
+	Item       Item       `json:"-"`
+	StockBatch StockBatch `json:"-"`
 }
 
 type InboundItemDatamodel struct{}

@@ -104,6 +104,13 @@ func (inventoryModule *InventoryModule) StoreInboundItem(w http.ResponseWriter, 
 		return
 	}
 
+	// set item stock
+	itemModel := model.NewItemModel(ctx)
+	item, _ := itemModel.Get(ctx, inboundItem.ItemID)
+	item.Stock += inboundItem.ReceivedAmount
+	itemModel.Update(ctx, item.Id, item)
+
+	// set batch stock
 	batchModel := model.NewStockBatchodel(ctx)
 	batch := model.StockBatch{
 		InboundId: inboundItem.Id,
@@ -136,6 +143,7 @@ func (inventoryModule *InventoryModule) PutInboundItem(w http.ResponseWriter, r 
 
 	id, _ := strconv.Atoi(p.ByName("id"))
 	inboundItem := model.InboundItem{
+		Id:             id,
 		ItemID:         addInboundItemForm.ItemID,
 		Status:         addInboundItemForm.Status,
 		OrderAmount:    addInboundItemForm.OrderAmount,
