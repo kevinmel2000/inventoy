@@ -143,6 +143,7 @@ func (inventoryModule *InventoryModule) PutInboundItem(w http.ResponseWriter, r 
 
 	id, _ := strconv.Atoi(p.ByName("id"))
 	inboundItem := model.InboundItem{
+		Id:             id,
 		ItemID:         addInboundItemForm.ItemID,
 		Status:         addInboundItemForm.Status,
 		OrderAmount:    addInboundItemForm.OrderAmount,

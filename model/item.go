@@ -10,6 +10,14 @@ type Item struct {
 	Data
 }
 
+type ReportRecord struct {
+	Sku        string
+	Name       string
+	TotalItem  int
+	Avarage    int
+	TotalValue int
+}
+
 type ItemDatamodel struct{}
 
 func NewItemModel(ctx context.Context) *ItemDatamodel {
@@ -75,9 +83,49 @@ func (itemDatamodel ItemDatamodel) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-func (itemDatamodel ItemDatamodel) GetTotalSKU(ctx context.Context) int {
-	db := initDB()
+func (itemDatamodel ItemDatamodel) GetTotalItem(ctx context.Context) int {
+	db := initSQL()
 	defer db.Close()
+	var total int
+	rows, _ := db.Query("SELECT SUM(received_amount) as total FROM inbound_items")
+	for rows.Next() {
+		rows.Scan(&total)
+	}
 
-	return 1
+	return total
+}
+
+func (itemDatamodel ItemDatamodel) GetTotalValue(ctx context.Context) int {
+	db := initSQL()
+	defer db.Close()
+	var total int
+	rows, _ := db.Query("SELECT SUM(total) as total FROM inbound_items")
+	for rows.Next() {
+		rows.Scan(&total)
+	}
+
+	return total
+}
+
+func (itemDatamodel ItemDatamodel) GetRecord(ctx context.Context) []ReportRecord {
+	db := initSQL()
+	defer db.Close()
+	var record []ReportRecord
+	var r ReportRecord
+	var sku, name string
+	var stock, total int
+	rows, _ := db.Query("SELECT sku, name, SUM(received_amount) as stock, SUM(total) as total FROM items JOIN inbound_items on items.id = inbound_items.item_id group by items.id")
+	for rows.Next() {
+		rows.Scan(&sku, &name, &stock, &total)
+		r.Sku = sku
+		r.Name = name
+		r.TotalItem = stock
+		r.TotalValue = total
+		r.Avarage = total / stock
+
+		record = append(record, r)
+	}
+
+	return record
+
 }

@@ -42,5 +42,5 @@ func (api *API) Register(r *httprouter.Router) {
 
 	// report
 	r.GET("/report/item_value", api.Report.GetItemValueReport)
-	r.GET("/report/selling/:month", api.Report.GetSellingReport)
+	r.GET("/report/selling/:month/:year", api.Report.GetSellingReport)
 }

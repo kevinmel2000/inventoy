@@ -23,6 +23,7 @@ type AddOrderItemForm struct {
 	Id         int
 	ItemId     int `valid:"required"`
 	BatchId    int
+	Status     int
 	SellAmount int    `valid:"required"`
 	Price      int    `valid:"required"`
 	Total      int    `valid:"required"`
@@ -111,9 +112,10 @@ func (inventoryModule *InventoryModule) StoreOutboundItem(w http.ResponseWriter,
 			OutboundID: outboundItem.Id,
 			BatchID:    stock.Id,
 			SellAmount: order.SellAmount,
+			Status:     order.Status,
 			Price:      order.Price,
 			Total:      order.Total,
-			Notes: 		order.Notes,
+			Notes:      order.Notes,
 		}
 		// update stock item
 		item, _ := itemModel.Get(ctx, order.ItemId)
@@ -145,6 +147,7 @@ func (inventoryModule *InventoryModule) PutOutboundItem(w http.ResponseWriter, r
 
 	itemDatamodel := model.NewOutboundItemModel(ctx)
 	outboundItem := model.OutboundItem{
+		Id:    id,
 		Notes: addOutboundItemForm.Notes,
 	}
 
@@ -168,6 +171,7 @@ func (inventoryModule *InventoryModule) PutOutboundItem(w http.ResponseWriter, r
 		stockBatchModel.Update(ctx, stock.Id, stock)
 
 		//update order item
+		orderItem.Status = order.Status
 		orderItem.SellAmount = order.SellAmount
 		orderItem.Price = order.Price
 		orderItem.Total = order.Total

@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/csv"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/mistikel/inventoy/model"
@@ -12,31 +14,32 @@ import (
 
 func (reportModule *ReportModule) GetItemValueReport(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ctx := context.Background()
-	record := []string{"SSI-D00791015-LL-BWH", "Zalekia Plain Casual Blouse (L,Broken White)", "53", "Rp70,448", "Rp3,733,735"}
-
+	year, month, day := time.Now().Date()
 	itemDatamodel := model.NewItemModel(ctx)
-	TotalSku, _ := itemDatamodel.GetMany(ctx) // len(totalsku)
-
+	record := itemDatamodel.GetRecord(ctx)
+	TotalSku, _ := itemDatamodel.GetMany(ctx)
+	totalItem := itemDatamodel.GetTotalItem(ctx)
+	totalValue := itemDatamodel.GetTotalValue(ctx)
 	b := &bytes.Buffer{}
 	wr := csv.NewWriter(b)
 	// Header
 	wr.Write([]string{"LAPORAN NILAI BARANG"})
 	wr.Write([]string{})
-	wr.Write([]string{"Tanggal Cetak", "8 Januari 2018"})
-	wr.Write([]string{"Jumlah SKU", "31"})
-	wr.Write([]string{"Jumlah Total Barang", "4086"})
-	wr.Write([]string{"Total Nilai", "Rp286,272,941"})
+	wr.Write([]string{"Tanggal Cetak", strconv.Itoa(day) + " " + month.String() + " " + strconv.Itoa(year)})
+	wr.Write([]string{"Jumlah SKU", strconv.Itoa(len(TotalSku))})
+	wr.Write([]string{"Jumlah Total Barang", strconv.Itoa(totalItem)})
+	wr.Write([]string{"Total Nilai", "Rp" + strconv.Itoa(totalValue)})
 	wr.Write([]string{})
 	wr.Write([]string{"SKU", "Nama Item", "Jumlah", "Rata-Rata Harga Beli", "Total"})
 
-	for i := 0; i < 20; i++ {
-		wr.Write(record)
+	for _, r := range record {
+		wr.Write([]string{r.Sku, r.Name, strconv.Itoa(r.TotalItem), "Rp" + strconv.Itoa(r.Avarage), "Rp" + strconv.Itoa(r.TotalValue)})
 	}
 	wr.Flush()
 
 	w.Header().Set("Content-Type", "text/csv")
 
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment;filename=TheCSVFileName.csv")
+	w.Header().Set("Content-Disposition", "attachment;filename=Laporan Nilai Barang.csv")
 	w.Write(b.Bytes())
 }

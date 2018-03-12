@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -56,5 +57,10 @@ func initDB() *gorm.DB {
 		db.Set("gorm:table_options", "ENGINE=InnoDB").CreateTable(&OrderItem{})
 	}
 
+	return db
+}
+
+func initSQL() *sql.DB {
+	db, _ := sql.Open("sqlite3", "./inventory.db")
 	return db
 }

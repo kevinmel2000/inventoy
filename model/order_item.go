@@ -7,6 +7,7 @@ type OrderItem struct {
 	ItemID     int    `json:"id_item"`
 	OutboundID int    `json:"id_outbound_item"`
 	BatchID    int    `json:"-"`
+	Status     int    `json:"-"`
 	SellAmount int    `json:"sell_amount"`
 	Price      int    `json:"price"`
 	Total      int    `json:"total_price"`
@@ -67,11 +68,11 @@ func (orderItemDatamodel OrderItemDatamodel) Update(ctx context.Context, id int,
 	return nil
 }
 
-func (orderItemDatamodel OrderItemDatamodel) GetByOutbound(ctx context.Context, OutboundID int) (OrderItem, error) {
+func (orderItemDatamodel OrderItemDatamodel) GetByOutbound(ctx context.Context, OutboundID int) ([]OrderItem, error) {
 	db := initDB()
 	defer db.Close()
 
-	var order OrderItem
+	var order []OrderItem
 	err := db.Where("outbound_id = ?", OutboundID).Find(&order).Error
 
 	return order, err
